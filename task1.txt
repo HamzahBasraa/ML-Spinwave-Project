@@ -1,0 +1,35 @@
+// this is the first mumax simulation i am running myself
+// a spin wave should propogate  from one side of a rectangle to another 
+// after this i should make a python script to visualise the data
+
+//this is the grid size 
+SetGridsize(128, 32, 1)
+SetCellsize(500e-9/128, 125e-9/32, 3e-9)
+
+
+//creating rectangle shape
+setgeom( rect(500e-9,250e-9))
+saveas(geom,"rect")
+
+
+//material details
+Msat  = 800e3
+Aex   = 13e-12
+alpha = 0.02
+
+
+// this is how the position of the cells starts
+m = uniform(1, .1, 0)
+relax()
+save(m)    // relaxed state
+
+
+//how frequently data should be saved in picoseconds
+autosave(m, 200e-12)
+tableautosave(10e-12)
+
+//frequency 
+f := 1e9 // 1 gigahertz
+// the external magnet 
+B_ext = vector(0.0, 1e-3*sin(2*pi*f*t), 0.0)
+run(2e-9)

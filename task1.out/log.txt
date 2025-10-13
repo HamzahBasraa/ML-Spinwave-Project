@@ -1,0 +1,33 @@
+//mumax 3.11.1 [windows_amd64 go1.22.4(gc) CUDA-12.9]
+//commit hash: ee077035
+//CPU info: Unknown, Error: exec: "wmic": executable file not found in %PATH%
+//GPU info: NVIDIA GeForce RTX 3080(10239MB), CUDA Driver 13.0, cc=8.6, using cc=75 PTX
+//OS  info: Windows OS, Hostname: DESKTOP-GQDTGDJ
+//Timestamp: 2025-10-13 19:38:15
+//(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
+//This is free software without any warranty. See license.txt
+//********************************************************************//
+//  If you use mumax in any work or publication,                      //
+//  we kindly ask you to cite the references in references.bib        //
+//********************************************************************//
+//output directory: task1.out/
+SetGridsize(128, 32, 1)
+SetCellsize(500e-9/128, 125e-9/32, 3e-9)
+setgeom(rect(500e-9, 250e-9))
+saveas(geom, "rect")
+Msat = 800e3
+Aex = 13e-12
+alpha = 0.02
+m = uniform(1, .1, 0)
+relax()
+save(m)
+autosave(m, 200e-12)
+tableautosave(10e-12)
+f := 1e9
+B_ext = vector(0.0, 1e-3*sin(2*pi*f*t), 0.0)
+run(2e-9)
+//********************************************************************//
+//Please cite the following references, relevant for your simulation. //
+//See bibtex file in output folder for justification.                 //
+//********************************************************************//
+//   * Vansteenkiste et al., AIP Adv. 4, 107133 (2014).
