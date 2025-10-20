@@ -31,5 +31,5 @@ tableautosave(10e-12)
 //frequency 
 f := 1e9 // 1 gigahertz
 // the external magnet 
-B_ext = vector(0.0, 1e-3*sin(2*pi*f*t), 0.0)
+B_ext = vector(0.0, 1e-3*sin(2*pi*f*t), 200e-3)
 run(2e-9)

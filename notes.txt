@@ -1,0 +1,39 @@
+
+//IMPORTANT
+convert ovf to np arrays  using mumax convert
+just look at y components
+use the 2d matrix to map out the component 
+can ignore z as its one cell thick so same fro all
+interpret y values as pixel brightneses
+normalise according to largest number
+do this for each ovf file
+np arrays are zyx [1.2.3]
+[0] is xyz
+
+play this as a video 
+
+
+
+fourier transform 
+for each pixel we do it
+use z as a function of time 
+its like making a heat map
+^^^ look into this after first stask
+
+
+
+demonestarte that waves dont go aroudn corners well
+could test the minimum radius of a bemd to see whats needed for a curve to go aroudn
+
+acyion points 
+change b field
+frist task
+
+search python for mumax3 - google colab 
+
+
+Material: ( check the paper he sent for material detials)
+YIG 
+Msat
+aex
+
