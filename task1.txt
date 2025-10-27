@@ -8,14 +8,15 @@ SetCellsize(500e-9/128, 125e-9/32, 3e-9)
 
 
 //creating rectangle shape
-setgeom( rect(500e-9,250e-9))
+setgeom( rect(500e-9,125e-9))
 saveas(geom,"rect")
 
+defregion(1, xrange(0, 100e-9))  // region 1: x from 0 to 100 nm
 
 //material details
 Msat  = 800e3
 Aex   = 13e-12
-alpha = 0.02
+alpha = 0.005
 
 
 // this is how the position of the cells starts
@@ -31,5 +32,12 @@ tableautosave(10e-12)
 //frequency 
 f := 1e9 // 1 gigahertz
 // the external magnet 
-B_ext = vector(0.0, 1e-3*sin(2*pi*f*t), 200e-3)
+// Uniform bias field (applies everywhere)
+B_ext= vector(0, 0, 0.2)
+
+// Excitation field (applies only in region 1)
+B_ext.SetRegion(1,vector(0, 1e-3*sin(2*pi*f*t), 0))
+
+
+
 run(2e-9)

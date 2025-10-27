@@ -37,3 +37,26 @@ YIG
 Msat
 aex
 
+
+// weeks 5
+May want to concatenate all npy files in to a 5d array 
+
+Then I can do a Fourier transform across that 5th dimension 
+
+Fst is a useful algorithm  - fast Fourier transform 
+
+     Takes a signal that has time on the x axis 
+
+     And separate it to the sin waves 
+
+     Can tell us how far a 2.2ghz can oscillate 
+
+
+
+Fix magnet:
+
+B_ext 
+
+Specify a region where the oscillation starts 
+
+Copy the paper 

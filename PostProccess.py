@@ -75,22 +75,56 @@ def run_mumax3(script, name, verbose=False):
     return table, fields
 
 
-def visualise(random):
+def fft(output_path):
+
+    files = sorted(glob(output_path + '/*.npy')) #ensures theyre in order 
+    n_components, n_z, n_y, n_x = np.load(files[0]).shape
+    n_time = len(files)
+    dt = 200e-12 #known time step should work to change this so it is extracted from the script
+
+    # Create empty 5D array
+    data_5d = np.zeros((n_time, n_components, n_z, n_y, n_x))
+        
+    for i,f in enumerate(files): #for each file 
+        data_5d[i] = np.load(f) #this is the 5d array
+    My_initial = data_5d[:,1,0,:,:] #3d array with time, x , y 
+
+    my_t = My_initial - My_initial[0, :, :] #only containts oscillating data now as we removed the intial state
+
+    #performing fast fourier transform
+    #---------STUDY THIS ------------------------
+    fast_transform = np.fft.fft(my_t, axis=0)  
+    freqs = np.fft.fftfreq(n_time, dt)
+
+
+    f_drive = 1e9
+    idx = np.argmin(np.abs(freqs - f_drive))
+    amplitude = np.abs(fast_transform[idx, :, :])
+    #-------------------------------------------------
+
+    amp_norm = (amplitude - amplitude.min()) / (amplitude.max() - amplitude.min())
+    plt.imshow(amp_norm, origin='lower', cmap='jet')
+    plt.colorbar(label='Normalized |My| Amplitude')
+    plt.show()
+
+def visualise(output_path):
     # so what i want to do now is 
         # use nested for loops and to plot a the graph
         # an array should store the intesity of y at each point in the matrix
         # the matrix's coordinates ie [x][y] will store the normalised intensity of y at each point
 
-    files = sorted(glob(output + '/*.npy')) #ensures theyre in order 
+    files = sorted(glob(output_path + '/*.npy')) #ensures theyre in order 
         
     for f in files: #for each file 
         a = np.load(f) #load the numpy arrays  in to python
-        #print(a.shape)
-        My_initial = a[1,0,:,:] #accesing just my accross the whole grid this is a matrix of values we want to use
 
-        My = (My_initial-My_initial.min())/(My_initial.max()-My_initial.min())
+        first_index = 1 if a.shape[0] > 1 else 0
 
-        plt.imshow(My, origin='lower', cmap='RdBu')
+        My_first = a[first_index, 0, :, :]  # shape will be (32, 128)
+
+        My = (My_first-My_first.min())/(My_first.max()-My_first.min())
+
+        plt.imshow(My, origin='lower', cmap='jet')
         plt.title("My across the film")
         plt.xlabel("x")
         plt.ylabel("y")
@@ -98,7 +132,9 @@ def visualise(random):
         plt.show()
                 
 
+
 #read_mumax3_ovffiles(output)
 # run_mumax3(MumaxScript,name)
-read_mumax3_ovffiles(output)
+# read_mumax3_ovffiles(output)
 visualise(output)
+fft(output)
