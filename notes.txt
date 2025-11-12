@@ -60,3 +60,25 @@ B_ext
 Specify a region where the oscillation starts 
 
 Copy the paper 
+
+
+May want to concatenate all npy files in to a 5f array 
+Then I can do a Fourier transform across that 5th dimension 
+Fst is a useful algorithm  - fast Fourier transform 
+     Takes a signal that has time on the x axis 
+     And separate it to the sin waves 
+     Can tell us how far a 2.2ghz can oscillate 
+
+Fix magnet 
+B_ext 
+Specify a region where the oscillation starts 
+Copy the paper 
+
+Use shape .scale 
+Make multiplexer from paper but 3d
+Instead of holes put magnets which dot above the device 
+Make the shapes cylinders 
+Use machine learning to try and find the optimal postion of these cylinders 
+Look into genetic algos 
+Gradient descent 
+Resovioir computing

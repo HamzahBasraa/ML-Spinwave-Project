@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import subprocess
 from subprocess import run, PIPE, STDOUT
 from glob import glob
 from os import path
@@ -8,8 +9,8 @@ from numpy import load
 import os
 
 file = 'task1.out/table.txt'
-output = "test1.out"
-name = "test1"
+output = "scriptcopy.out"
+name = "scriptcopy"
 file_path = 'task1.txt'
 
 with open(file_path, 'r') as file: #script 
@@ -92,7 +93,7 @@ def fft(output_path):
     my_t = My_initial - My_initial[0, :, :] #only containts oscillating data now as we removed the intial state
 
     #performing fast fourier transform
-    #---------STUDY THIS ------------------------
+    #------------------------------------------------
     fast_transform = np.fft.fft(my_t, axis=0)  
     freqs = np.fft.fftfreq(n_time, dt)
 
@@ -131,10 +132,7 @@ def visualise(output_path):
         plt.colorbar(label="My")
         plt.show()
                 
-
-
-#read_mumax3_ovffiles(output)
 # run_mumax3(MumaxScript,name)
-# read_mumax3_ovffiles(output)
+read_mumax3_ovffiles(output)
 visualise(output)
 fft(output)
