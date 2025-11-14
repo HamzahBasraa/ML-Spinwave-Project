@@ -79,7 +79,7 @@ def run_mumax3(script, name, verbose=False):
 def fft(output_path):
 
     files = sorted(glob(output_path + '/*.npy')) #ensures theyre in order 
-    n_components, n_z, n_y, n_x = np.load(files[0]).shape
+    n_components, n_z, n_y, n_x = np.load(files[4]).shape
     n_time = len(files)
     dt = 200e-12 #known time step should work to change this so it is extracted from the script
 
@@ -133,6 +133,6 @@ def visualise(output_path):
         plt.show()
                 
 # run_mumax3(MumaxScript,name)
-read_mumax3_ovffiles(output)
-visualise(output)
+# read_mumax3_ovffiles(output)
+# visualise(output)
 fft(output)
