@@ -92,6 +92,7 @@ alpha = 2e-4
 
 // this is how the position of the cells starts
 m = uniform(1, .1, 0)
+B_ext= vector(0, 0, 0.2)
 relax()
 save(m)    // relaxed state
 
@@ -104,7 +105,7 @@ tableautosave(10e-12)
 f := 1e9 // 1 gigahertz
 // the external magnet 
 // Uniform bias field (applies everywhere)
-B_ext= vector(0, 0, 0.2)
+
 
 // Excitation field (applies only in region 1)
 B_ext.SetRegion(2,vector(0, 1e-3*sin(2*pi*f*t), 0))

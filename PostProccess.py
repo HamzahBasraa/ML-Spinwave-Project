@@ -132,7 +132,7 @@ def visualise(output_path):
         plt.colorbar(label="My")
         plt.show()
                 
-run_mumax3(MumaxScript,name)
-read_mumax3_ovffiles(output)
+# run_mumax3(MumaxScript,name)
+# read_mumax3_ovffiles(output)
 visualise(output)
 fft(output)
