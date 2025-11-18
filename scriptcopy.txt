@@ -1,0 +1,101 @@
+// this is the first mumax simulation i am running myself
+// a spin wave should propogate  from one side of a rectangle to another 
+// after this i should make a python script to visualise the data
+
+//this is the grid size 
+SetGridsize(600,200 , 1)
+SetCellsize(5e-9, 5e-9, 3e-9)
+//variables for postions max +/- 0.5e-6, should only change by 100e-9 at a time 
+//variables to be changed by a machine learning algorithm
+
+
+a :=0.3e-6
+b :=0.1e-6
+c :=-0.4e-6
+d :=-0.2e-6
+//square cutouts
+length := 0.1e-6
+box1 := cylinder(length,length).transl(a,c,2e-9)
+setgeom(box1)
+saveas(geom,"floating_cylinder")
+
+box2 := rect(length,length).transl(d,b,0)
+
+//creating rectangle shape
+
+input := rect(1e-6,0.3e-6).transl(-1e-6, 0,0)
+
+box := rect(1e-6,1e-6)
+
+output1 := rect(1e-6,0.3e-6).transl(1e-6,350e-9,0)
+
+output2 := rect(1e-6,0.3e-6).transl(1e-6,-350e-9,0)
+
+
+
+multiplexer :=input.add(box).add(output1).add(output2).sub(box2)
+
+setgeom(multiplexer)
+saveas(geom, "multiplexer")
+
+//regions for propgation and detection
+
+input_detector := rect(0.2e-9, 0.3e-6).transl(-0.75e-6, 0 , 0)
+
+output1_detector := rect(0.2e-9, 0.3e-6).transl(0.75e-6, 0.35e-6 , 0)
+
+output2_detector := rect(0.2e-9, 0.3e-6).transl(0.75e-6, -0.35e-6 , 0)
+
+defregion(1,multiplexer)
+defregion(2,input_detector)
+defregion(3,output1_detector)
+defregion(4,output2_detector)
+
+//adding outer layer for damping
+first := multiplexer.scale(0.9,0.9,0.9)
+second := multiplexer.scale(0.92,0.92,0.92)
+third := multiplexer.scale(0.94,0.94,0.94)
+fourth := multiplexer.scale(0.96,0.96,0.96)
+fifth := multiplexer.scale(0.98,0.98,0.98)
+
+defregion(5,first)
+alpha.SetRegion(5,0.1)
+defregion(6,second)
+alpha.SetRegion(6,0.2)
+defregion(7,third)
+alpha.SetRegion(7,0.3)
+defregion(8,fourth)
+alpha.SetRegion(8,0.4)
+defregion(9,fifth)
+alpha.SetRegion(9,0.5)
+
+
+
+//material details - YIG
+Msat  = 1.4e5
+Aex   = 3.5e-12
+alpha = 2e-4
+
+
+// this is how the position of the cells starts
+m = uniform(1, .1, 0)
+relax()
+save(m)    // relaxed state
+
+
+//how frequently data should be saved in picoseconds
+autosave(m, 200e-12)
+tableautosave(10e-12)
+
+//frequency 
+f := 1e9 // 1 gigahertz
+// the external magnet 
+// Uniform bias field (applies everywhere)
+B_ext= vector(0, 0, 0.2)
+
+// Excitation field (applies only in region 1)
+B_ext.SetRegion(2,vector(0, 1e-3*sin(2*pi*f*t), 0))
+
+
+
+run(2e-9)
