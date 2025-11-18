@@ -19,57 +19,70 @@ box1 := cylinder(length,length).transl(a,c,2e-9)
 setgeom(box1)
 saveas(geom,"floating_cylinder")
 
+box := rect(1e-6,1e-6)
 box2 := rect(length,length).transl(d,b,0)
 
-//creating rectangle shape
-
 input := rect(1e-6,0.3e-6).transl(-1e-6, 0,0)
-
-box := rect(1e-6,1e-6)
 
 output1 := rect(1e-6,0.3e-6).transl(1e-6,350e-9,0)
 
 output2 := rect(1e-6,0.3e-6).transl(1e-6,-350e-9,0)
-
-
 
 multiplexer :=input.add(box).add(output1).add(output2).sub(box2)
 
 setgeom(multiplexer)
 saveas(geom, "multiplexer")
 
-//regions for propgation and detection
-
-input_detector := rect(0.2e-9, 0.3e-6).transl(-0.75e-6, 0 , 0)
-
-output1_detector := rect(0.2e-9, 0.3e-6).transl(0.75e-6, 0.35e-6 , 0)
-
-output2_detector := rect(0.2e-9, 0.3e-6).transl(0.75e-6, -0.35e-6 , 0)
 
 defregion(1,multiplexer)
+
+
+//adding damping 
+
+numberofregions := 120                     // number of shells
+minD := 2e-4                 // start damping (inner)
+maxD := 0.5                  // end damping (outer)
+scale_min := 0.9             // innermost scale (smallest)
+scale_max := 1.0             // outermost scale (original size)
+
+// growth factor to go from minD -> maxD in N steps:
+k := pow(maxD/minD, 1.0/(numberofregions-1))   // NOTE: maxD/minD, and float divisor
+
+// loop from outermost (largest scale, i = N-1) down to innermost (i = 0)
+for i := numberofregions-1; i >= 0; i-- {
+
+    // linear spacing for geometry (physical thickness equal)
+    distance := scale_min + (scale_max - scale_min) * i / (numberofregions-1)
+
+    // exponential damping values from minD -> maxD
+    alphaValue := minD * pow(k, i)
+
+    regionId := 5 + i
+
+    // scaled geometry
+    shape_i := multiplexer.scale(distance, distance, 1)
+
+    defregion(regionId, shape_i)
+    alpha.SetRegion(regionId, alphaValue)
+
+}
+
+
+//creating rectangle shape
+
+
+
+//regions for propgation and detection
+
+input_detector := rect(0.2e-6, 0.3e-6).transl(-0.75e-6, 0 , 0)
+
+output1_detector := rect(0.2e-6, 0.3e-6).transl(0.75e-6, 0.35e-6 , 0)
+
+output2_detector := rect(0.2e-6, 0.3e-6).transl(0.75e-6, -0.35e-6 , 0)
+
 defregion(2,input_detector)
 defregion(3,output1_detector)
 defregion(4,output2_detector)
-
-//adding outer layer for damping
-first := multiplexer.scale(0.9,0.9,0.9)
-second := multiplexer.scale(0.92,0.92,0.92)
-third := multiplexer.scale(0.94,0.94,0.94)
-fourth := multiplexer.scale(0.96,0.96,0.96)
-fifth := multiplexer.scale(0.98,0.98,0.98)
-
-defregion(5,first)
-alpha.SetRegion(5,0.1)
-defregion(6,second)
-alpha.SetRegion(6,0.2)
-defregion(7,third)
-alpha.SetRegion(7,0.3)
-defregion(8,fourth)
-alpha.SetRegion(8,0.4)
-defregion(9,fifth)
-alpha.SetRegion(9,0.5)
-
-
 
 //material details - YIG
 Msat  = 1.4e5

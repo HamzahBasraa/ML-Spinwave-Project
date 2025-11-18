@@ -3,7 +3,7 @@
 //CPU info: Unknown, Error: exec: "wmic": executable file not found in %PATH%
 //GPU info: NVIDIA GeForce RTX 3080(10239MB), CUDA Driver 13.0, cc=8.6, using cc=75 PTX
 //OS  info: Windows OS, Hostname: DESKTOP-GQDTGDJ
-//Timestamp: 2025-11-18 12:41:11
+//Timestamp: 2025-11-18 13:38:59
 //(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
 //This is free software without any warranty. See license.txt
 //********************************************************************//
@@ -21,36 +21,35 @@ length := 0.1e-6
 box1 := cylinder(length, length).transl(a, c, 2e-9)
 setgeom(box1)
 saveas(geom, "floating_cylinder")
+box := rect(1e-6, 1e-6)
 box2 := rect(length, length).transl(d, b, 0)
 input := rect(1e-6, 0.3e-6).transl(-1e-6, 0, 0)
-box := rect(1e-6, 1e-6)
 output1 := rect(1e-6, 0.3e-6).transl(1e-6, 350e-9, 0)
 output2 := rect(1e-6, 0.3e-6).transl(1e-6, -350e-9, 0)
 multiplexer := input.add(box).add(output1).add(output2).sub(box2)
 setgeom(multiplexer)
 saveas(geom, "multiplexer")
-input_detector := rect(0.2e-9, 0.3e-6).transl(-0.75e-6, 0, 0)
-output1_detector := rect(0.2e-9, 0.3e-6).transl(0.75e-6, 0.35e-6, 0)
-output2_detector := rect(0.2e-9, 0.3e-6).transl(0.75e-6, -0.35e-6, 0)
 defregion(1, multiplexer)
+numberofregions := 120
+minD := 2e-4
+maxD := 0.5
+scale_min := 0.9
+scale_max := 1.0
+k := pow(maxD/minD, 1.0/(numberofregions-1))
+for i := numberofregions - 1; i >= 0; i-- {
+	distance := scale_min + (scale_max-scale_min)*i/(numberofregions-1)
+	alphaValue := minD * pow(k, i)
+	regionId := 5 + i
+	shape_i := multiplexer.scale(distance, distance, 1)
+	defregion(regionId, shape_i)
+	alpha.SetRegion(regionId, alphaValue)
+}
+input_detector := rect(0.2e-6, 0.3e-6).transl(-0.75e-6, 0, 0)
+output1_detector := rect(0.2e-6, 0.3e-6).transl(0.75e-6, 0.35e-6, 0)
+output2_detector := rect(0.2e-6, 0.3e-6).transl(0.75e-6, -0.35e-6, 0)
 defregion(2, input_detector)
 defregion(3, output1_detector)
 defregion(4, output2_detector)
-first := multiplexer.scale(0.9, 0.9, 0.9)
-second := multiplexer.scale(0.92, 0.92, 0.92)
-third := multiplexer.scale(0.94, 0.94, 0.94)
-fourth := multiplexer.scale(0.96, 0.96, 0.96)
-fifth := multiplexer.scale(0.98, 0.98, 0.98)
-defregion(5, first)
-alpha.SetRegion(5, 0.1)
-defregion(6, second)
-alpha.SetRegion(6, 0.2)
-defregion(7, third)
-alpha.SetRegion(7, 0.3)
-defregion(8, fourth)
-alpha.SetRegion(8, 0.4)
-defregion(9, fifth)
-alpha.SetRegion(9, 0.5)
 Msat = 1.4e5
 Aex = 3.5e-12
 alpha = 2e-4
