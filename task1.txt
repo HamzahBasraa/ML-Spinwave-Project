@@ -113,3 +113,7 @@ B_ext.SetRegion(2,vector(0, 1e-3*sin(2*pi*f*t), 0))
 
 
 run(2e-9)
+
+//should only be one set geom , all magnetic regions should be included in this
+//increase z cells
+//genetic algos 
