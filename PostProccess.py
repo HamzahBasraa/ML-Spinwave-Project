@@ -267,7 +267,7 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
                 
 run_mumax3(MumaxScript,name)
 read_mumax3_ovffiles(output)
-visualise(output)
-fft(output)
+# visualise(output)
+# fft(output)
 # update_parameters(file_path, position_dict)
 # extract_detector_fft(output)
