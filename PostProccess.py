@@ -7,11 +7,29 @@ from glob import glob
 from os import path
 from numpy import load
 import os
+import re
 
 file = 'task1.out/table.txt'
 output = "scriptcopy.out"
 name = "scriptcopy"
 file_path = 'task1.txt'
+
+
+position_dict = {"c1_x": 0.2e-6,
+                "c1_y": -0.5e-6,
+                "c2_x": -0.1e-6,
+                "c2_y": 0.3e-6,
+                "c3_x": 0.4e-6,
+                "c3_y": -0.2e-6,
+                "c4_x": -0.3e-6,
+                "c4_y": 0.0e-6,
+                "c5_x": 0.5e-6,
+                "c5_y": 0.1e-6,
+                "c6_x": -0.4e-6,
+                "c6_y": -0.1e-6,
+                "c7_x": 0.0e-6,
+                "c7_y": 0.4e-6}
+
 
 with open(file_path, 'r') as file: #script 
     MumaxScript = file.read()
@@ -131,8 +149,125 @@ def visualise(output_path):
         plt.ylabel("y")
         plt.colorbar(label="My")
         plt.show()
+
+
+def update_parameters(input_file, position_dict):
+    """
+    param_dict = {'1_x': value, '1_y': value, 'length': value, ...}
+    """
+
+    with open(input_file, 'r') as f:
+        text = f.read()
+
+    # For each parameter create a regex pattern and replace
+    for key, value in position_dict.items():
+        # MuMax lines look like: key := number
+        pattern = rf"{key}\s*:=\s*[-+0-9.eE]+"
+        replacement = f"{key} := {value}"
+        text = re.sub(pattern, replacement, text)
+
+    with open(input_file, 'w') as f:
+        f.write(text)
+
+    print(f"Updated parameters")
+
+def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
+    import numpy as np
+    from glob import glob
+
+    # -----------------------
+    # Load files
+    # -----------------------
+    files = sorted(glob(output_path + '/*.npy'))
+    n_components, n_z, n_y, n_x = np.load(files[0]).shape
+    n_time = len(files)
+
+    data_5d = np.zeros((n_time, n_components, n_z, n_y, n_x))
+
+    for i, f in enumerate(files):
+        data_5d[i] = np.load(f)
+
+    # Use My component (component index 1) and z=0
+    my_t = data_5d[:,1,0,:,:]
+    my_t = my_t - my_t[0]       # remove DC component
+
+    # -----------------------
+    # FFT
+    # -----------------------
+    fast_transform = np.fft.fft(my_t, axis=0)
+    freqs = np.fft.fftfreq(n_time, dt)
+
+    f_drive = 1e9
+    idx = np.argmin(np.abs(freqs - f_drive))
+
+    amplitude = np.abs(fast_transform[idx])
+
+    # -----------------------
+    # Detector definitions (µm → meters)
+    # -----------------------
+
+    domain_xmin = 0
+    domain_xmax = 600 * 5e-9  # = 3e-6 m
+    domain_ymin = 0
+    domain_ymax = 200 * 5e-9  # = 1e-6 m
+
+    # Convert physical coords → pixel indices
+    def x_to_ix(x):
+        return int((x - domain_xmin) / cellsize)
+
+    def y_to_iy(y):
+        return int((y - domain_ymin) / cellsize)
+
+
+
+    detectors = {
+        "output1": {"cx": 0.75e-6, "cy":  0.35e-6, "w": 0.2e-6, "h": 0.3e-6},
+        "output2": {"cx": 0.75e-6, "cy": -0.35e-6, "w": 0.2e-6, "h": 0.3e-6},
+    }
+
+    results = {}
+
+    for name, det in detectors.items():
+        cx, cy, w, h = det["cx"], det["cy"], det["w"], det["h"]
+
+        # convert to pixel indices
+        ix_min = int((cx - w/2) / cellsize)
+        ix_max = int((cx + w/2) / cellsize)
+        iy_min = int((cy - h/2) / cellsize)
+        iy_max = int((cy + h/2) / cellsize)
+
+        # ensure within grid
+        ix_min = max(ix_min, 0)
+        iy_min = max(iy_min, 0)
+        ix_max = min(ix_max, n_x - 1)
+        iy_max = min(iy_max, n_y - 1)
+
+        region = amplitude[iy_min:iy_max+1, ix_min:ix_max+1]
+        results[name] = np.mean(region)
+
+    print (results["output1"],results["output2"])
+    plt.imshow(amplitude, origin="lower")
+    plt.colorbar()
+
+    # draw a rectangle where the detector is
+    plt.gca().add_patch(
+        plt.Rectangle(
+            (ix_min, iy_min),
+            ix_max - ix_min,
+            iy_max - iy_min,
+            fill=False,
+            edgecolor='red',
+            linewidth=2
+        )
+    )
+
+    plt.title("Detector Region Overlay")
+    plt.show()
+    return results["output1"], results["output2"]
                 
-# run_mumax3(MumaxScript,name)
-# read_mumax3_ovffiles(output)
+run_mumax3(MumaxScript,name)
+read_mumax3_ovffiles(output)
 visualise(output)
 fft(output)
+# update_parameters(file_path, position_dict)
+# extract_detector_fft(output)

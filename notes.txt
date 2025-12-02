@@ -82,3 +82,6 @@ Use machine learning to try and find the optimal postion of these cylinders
 Look into genetic algos 
 Gradient descent 
 Resovioir computing
+
+
+current issues the cylinder is not interacting with the de multiplexer

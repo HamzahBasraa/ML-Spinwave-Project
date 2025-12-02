@@ -3,24 +3,43 @@
 // after this i should make a python script to visualise the data
 
 //this is the grid size 
-SetGridsize(600,200 , 1)
-SetCellsize(5e-9, 5e-9, 3e-9)
+SetGridsize(600,200 , 20)
+SetCellsize(5e-9, 5e-9, 5e-9)
 //variables for postions max +/- 0.5e-6, should only change by 100e-9 at a time 
 //variables to be changed by a machine learning algorithm
 
 
-a :=0.3e-6
-b :=0.1e-6
-c :=-0.4e-6
-d :=-0.2e-6
+c1_x := 2e-6
+c1_y := -5e-6
+c2_x := -1e-6
+c2_y := 3e-6
+c3_x := 4e-6
+c3_y := -2e-6
+c4_x := -3e-6
+c4_y := 0.0
+c5_x := 5e-6
+c5_y := 1e-6
+c6_x := -4e-6
+c6_y := -1e-6
+c7_x := 0.0
+c7_y := 4e-6
 //square cutouts
 length := 0.1e-6
-box1 := cylinder(length,length).transl(a,c,2e-9)
-setgeom(box1)
-saveas(geom,"floating_cylinder")
+
+// cylindrical pillars 
+
+cyl1 := cylinder(length,50e-9).transl(c1_x,c1_y,0)
+cyl2 := cylinder(length,50e-9).transl(c2_x,c2_y,0)
+cyl3 := cylinder(length,50e-9).transl(c3_x,c3_y,0)
+cyl4 := cylinder(length,50e-9).transl(c4_x,c4_y,0)
+cyl5 := cylinder(length,50e-9).transl(c5_x,c5_y,0)
+cyl6 := cylinder(length,50e-9).transl(c6_x,c6_y,0)
+cyl7 := cylinder(length,50e-9).transl(c7_x,c7_y,0)
+
+pillar_region := cyl1.add(cyl2).add(cyl3).add(cyl4).add(cyl5).add(cyl6).add(cyl7)
+defregion(6,pillar_region)
 
 box := rect(1e-6,1e-6)
-box2 := rect(length,length).transl(d,b,0)
 
 input := rect(1e-6,0.3e-6).transl(-1e-6, 0,0)
 
@@ -28,11 +47,9 @@ output1 := rect(1e-6,0.3e-6).transl(1e-6,350e-9,0)
 
 output2 := rect(1e-6,0.3e-6).transl(1e-6,-350e-9,0)
 
-multiplexer :=input.add(box).add(output1).add(output2).sub(box2)
+multiplexer :=input.add(box).add(output1).add(output2)
 
-setgeom(multiplexer)
-saveas(geom, "multiplexer")
-
+full_geom := multiplexer.sub(pillar_region)
 
 defregion(1,multiplexer)
 
@@ -57,7 +74,7 @@ for i := numberofregions-1; i >= 0; i-- {
     // exponential damping values from minD -> maxD
     alphaValue := minD * pow(k, i)
 
-    regionId := 5 + i
+    regionId := 12 + i
 
     // scaled geometry
     shape_i := multiplexer.scale(distance, distance, 1)
@@ -83,6 +100,13 @@ output2_detector := rect(0.2e-6, 0.3e-6).transl(0.75e-6, -0.35e-6 , 0)
 defregion(2,input_detector)
 defregion(3,output1_detector)
 defregion(4,output2_detector)
+Msat.SetRegion(6, 800e3)
+Aex.SetRegion(6, 13e-12)
+Alpha.SetRegion(6, 0.02)
+
+
+setgeom(full_geom)
+saveas(geom, "multiplexer")
 
 //material details - YIG
 Msat  = 1.4e5
@@ -107,7 +131,7 @@ f := 1e9 // 1 gigahertz
 // Uniform bias field (applies everywhere)
 
 
-// Excitation field (applies only in region 1)
+// Excitation field (applies only in region 2)
 B_ext.SetRegion(2,vector(0, 1e-3*sin(2*pi*f*t), 0))
 
 
