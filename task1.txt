@@ -28,13 +28,18 @@ length := 0.05e-6
 
 // cylindrical pillars 
 
-cyl1 := cylinder(length,50e-9).transl(c1_x,c1_y,25e-9)
-cyl2 := cylinder(length,50e-9).transl(c2_x,c2_y,25e-9)
-cyl3 := cylinder(length,50e-9).transl(c3_x,c3_y,25e-9)
-cyl4 := cylinder(length,50e-9).transl(c4_x,c4_y,25e-9)
-cyl5 := cylinder(length,50e-9).transl(c5_x,c5_y,25e-9)
-cyl6 := cylinder(length,50e-9).transl(c6_x,c6_y,25e-9)
-cyl7 := cylinder(length,50e-9).transl(c7_x,c7_y,25e-9)
+pillar_height := 50e-9
+film_thickness := 50e-9
+
+pillar_z := film_thickness/2 + pillar_height/2  // = +50 nm
+
+cyl1 := cylinder(length, pillar_height).transl(c1_x, c1_y, pillar_z)
+cyl2 := cylinder(length,pillar_height).transl(c2_x,c2_y,pillar_z)
+cyl3 := cylinder(length,pillar_height).transl(c3_x,c3_y,pillar_z)
+cyl4 := cylinder(length,pillar_height).transl(c4_x,c4_y,pillar_z)
+cyl5 := cylinder(length,pillar_height).transl(c5_x,c5_y,pillar_z)
+cyl6 := cylinder(length,pillar_height).transl(c6_x,c6_y,pillar_z)
+cyl7 := cylinder(length,pillar_height).transl(c7_x,c7_y,pillar_z)
 
 pillar_region := cyl1.add(cyl2).add(cyl3).add(cyl4).add(cyl5).add(cyl6).add(cyl7)
 defregion(6,pillar_region)

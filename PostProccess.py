@@ -113,6 +113,7 @@ def fft(output_path):
 
     my_t = My_initial - My_initial[0, :, :] #only containts oscillating data now as we removed the intial state
 
+
     #performing fast fourier transform
     #------------------------------------------------
     fast_transform = np.fft.fft(my_t, axis=0)  
@@ -122,6 +123,8 @@ def fft(output_path):
     f_drive = 1e9
     idx = np.argmin(np.abs(freqs - f_drive))
     amplitude = np.abs(fast_transform[idx, :, :])
+
+    
     #-------------------------------------------------
 
     amp_norm = (amplitude - amplitude.min()) / (amplitude.max() - amplitude.min())
@@ -294,6 +297,6 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
 # run_mumax3(MumaxScript,name)
 # read_mumax3_ovffiles(output)
 # visualise(output)
-# fft(output)
+fft(output)
 # update_parameters(file_path, position_dict)
-extract_detector_fft(output)
+# extract_detector_fft(output)
