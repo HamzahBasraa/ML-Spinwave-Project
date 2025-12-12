@@ -8,6 +8,7 @@ from os import path
 from numpy import load
 import os
 import re
+import time 
 
 file = 'task1.out/table.txt'
 output = "scriptcopy.out"
@@ -71,7 +72,7 @@ def run_mumax3(script, name, verbose=False):
       name:    name of the simulation (this will be the name of the script and output dir)
       verbose: print stdout of mumax3 when it is finished
     """
-
+    start = time.time()
     scriptfile = name + ".txt" 
     outputdir  = name + ".out"
 
@@ -91,6 +92,8 @@ def run_mumax3(script, name, verbose=False):
         
     fields = read_mumax3_ovffiles(outputdir)
     
+    end = time.time()
+    print(end-start)
     return table, fields
 
 
@@ -173,10 +176,11 @@ def update_parameters(input_file, position_dict):
 
 def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     import numpy as np
+    import matplotlib.pyplot as plt
     from glob import glob
 
     # -----------------------
-    # Load files
+    # Load time-series data
     # -----------------------
     files = sorted(glob(output_path + '/*.npy'))
     n_components, n_z, n_y, n_x = np.load(files[0]).shape
@@ -187,9 +191,11 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     for i, f in enumerate(files):
         data_5d[i] = np.load(f)
 
-    # Use My component (component index 1) and z=0
-    my_t = data_5d[:,1,0,:,:]
-    my_t = my_t - my_t[0]       # remove DC component
+    # Use My component (index 1) at z = 0
+    my_t = data_5d[:, 1, 0, :, :]
+
+    # Remove DC component (better than subtracting first frame)
+    my_t = my_t - np.mean(my_t, axis=0)
 
     # -----------------------
     # FFT
@@ -197,29 +203,26 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     fast_transform = np.fft.fft(my_t, axis=0)
     freqs = np.fft.fftfreq(n_time, dt)
 
-    f_drive = 1e9
+    f_drive = 1e9  # 1 GHz
     idx = np.argmin(np.abs(freqs - f_drive))
 
     amplitude = np.abs(fast_transform[idx])
 
     # -----------------------
-    # Detector definitions (µm → meters)
+    # Geometry / coordinates
     # -----------------------
+    Lx = n_x * cellsize
+    Ly = n_y * cellsize
 
-    domain_xmin = 0
-    domain_xmax = 600 * 5e-9  # = 3e-6 m
-    domain_ymin = 0
-    domain_ymax = 200 * 5e-9  # = 1e-6 m
+    def phys_to_ix(x):
+        return int((x + Lx / 2) / cellsize)
 
-    # Convert physical coords → pixel indices
-    def x_to_ix(x):
-        return int((x - domain_xmin) / cellsize)
+    def phys_to_iy(y):
+        return int((y + Ly / 2) / cellsize)
 
-    def y_to_iy(y):
-        return int((y - domain_ymin) / cellsize)
-
-
-
+    # -----------------------
+    # Detector definitions
+    # -----------------------
     detectors = {
         "output1": {"cx": 0.75e-6, "cy":  0.35e-6, "w": 0.2e-6, "h": 0.3e-6},
         "output2": {"cx": 0.75e-6, "cy": -0.35e-6, "w": 0.2e-6, "h": 0.3e-6},
@@ -227,47 +230,70 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
 
     results = {}
 
+    # -----------------------
+    # Plot FFT amplitude
+    # -----------------------
+    plt.figure(figsize=(8, 3))
+    plt.imshow(amplitude, origin="lower", cmap="inferno")
+    plt.colorbar(label="|My(f)|")
+    plt.title("Detector Regions on FFT Amplitude")
+
+    # -----------------------
+    # Extract detector values
+    # -----------------------
     for name, det in detectors.items():
         cx, cy, w, h = det["cx"], det["cy"], det["w"], det["h"]
 
-        # convert to pixel indices
-        ix_min = int((cx - w/2) / cellsize)
-        ix_max = int((cx + w/2) / cellsize)
-        iy_min = int((cy - h/2) / cellsize)
-        iy_max = int((cy + h/2) / cellsize)
+        ix_min = phys_to_ix(cx - w / 2)
+        ix_max = phys_to_ix(cx + w / 2)
+        iy_min = phys_to_iy(cy - h / 2)
+        iy_max = phys_to_iy(cy + h / 2)
 
-        # ensure within grid
+        # Clamp to array bounds
         ix_min = max(ix_min, 0)
         iy_min = max(iy_min, 0)
         ix_max = min(ix_max, n_x - 1)
         iy_max = min(iy_max, n_y - 1)
 
-        region = amplitude[iy_min:iy_max+1, ix_min:ix_max+1]
+        # Average FFT amplitude inside detector
+        region = amplitude[iy_min:iy_max + 1, ix_min:ix_max + 1]
         results[name] = np.mean(region)
 
-    print (results["output1"],results["output2"])
-    plt.imshow(amplitude, origin="lower")
-    plt.colorbar()
-
-    # draw a rectangle where the detector is
-    plt.gca().add_patch(
-        plt.Rectangle(
-            (ix_min, iy_min),
-            ix_max - ix_min,
-            iy_max - iy_min,
-            fill=False,
-            edgecolor='red',
-            linewidth=2
+        # ---- DRAW RECTANGLE ----
+        plt.gca().add_patch(
+            plt.Rectangle(
+                (ix_min, iy_min),
+                ix_max - ix_min,
+                iy_max - iy_min,
+                fill=False,
+                edgecolor="cyan",
+                linewidth=2
+            )
         )
-    )
 
-    plt.title("Detector Region Overlay")
+        # ---- DRAW CENTER POINT ----
+        plt.scatter(
+            phys_to_ix(cx),
+            phys_to_iy(cy),
+            c="white",
+            s=30
+        )
+
+    plt.xlabel("x (cells)")
+    plt.ylabel("y (cells)")
+    plt.tight_layout()
     plt.show()
+
+    print("Detector values:")
+    print("Output 1:", results["output1"])
+    print("Output 2:", results["output2"])
+
     return results["output1"], results["output2"]
+
                 
-run_mumax3(MumaxScript,name)
-read_mumax3_ovffiles(output)
+# run_mumax3(MumaxScript,name)
+# read_mumax3_ovffiles(output)
 # visualise(output)
 # fft(output)
 # update_parameters(file_path, position_dict)
-# extract_detector_fft(output)
+extract_detector_fft(output)

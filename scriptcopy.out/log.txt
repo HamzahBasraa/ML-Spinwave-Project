@@ -1,0 +1,83 @@
+//mumax 3.11.1 [windows_amd64 go1.22.4(gc) CUDA-12.9]
+//commit hash: ee077035
+//CPU info: Unknown, Error: exec: "wmic": executable file not found in %PATH%
+//GPU info: NVIDIA GeForce RTX 3080(10239MB), CUDA Driver 13.0, cc=8.6, using cc=75 PTX
+//OS  info: Windows OS, Hostname: DESKTOP-GQDTGDJ
+//Timestamp: 2025-12-04 00:06:41
+//(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
+//This is free software without any warranty. See license.txt
+//********************************************************************//
+//  If you use mumax in any work or publication,                      //
+//  we kindly ask you to cite the references in references.bib        //
+//********************************************************************//
+//output directory: scriptcopy.out/
+SetGridsize(600, 200, 20)
+SetCellsize(5e-9, 5e-9, 5e-9)
+c1_x := 2e-6
+c1_y := -5e-6
+c2_x := -1e-6
+c2_y := 3e-6
+c3_x := 4e-6
+c3_y := -2e-6
+c4_x := -3e-6
+c4_y := 0.0
+c5_x := 5e-6
+c5_y := 1e-6
+c6_x := -4e-6
+c6_y := -1e-6
+c7_x := 0.0
+c7_y := 4e-6
+length := 0.05e-6
+cyl1 := cylinder(length, 50e-9).transl(c1_x, c1_y, 25e-9)
+cyl2 := cylinder(length, 50e-9).transl(c2_x, c2_y, 25e-9)
+cyl3 := cylinder(length, 50e-9).transl(c3_x, c3_y, 25e-9)
+cyl4 := cylinder(length, 50e-9).transl(c4_x, c4_y, 25e-9)
+cyl5 := cylinder(length, 50e-9).transl(c5_x, c5_y, 25e-9)
+cyl6 := cylinder(length, 50e-9).transl(c6_x, c6_y, 25e-9)
+cyl7 := cylinder(length, 50e-9).transl(c7_x, c7_y, 25e-9)
+pillar_region := cyl1.add(cyl2).add(cyl3).add(cyl4).add(cyl5).add(cyl6).add(cyl7)
+defregion(6, pillar_region)
+box := cuboid(1e-6, 1e-6, 50e-9).transl(0, 0, -25e-9)
+input := cuboid(1e-6, 0.3e-6, 50e-9).transl(-1e-6, 0, -25e-9)
+output1 := cuboid(1e-6, 0.3e-6, 50e-9).transl(1e-6, 350e-9, -25e-9)
+output2 := cuboid(1e-6, 0.3e-6, 50e-9).transl(1e-6, -350e-9, -25e-9)
+multiplexer := input.add(box).add(output1).add(output2)
+full_geom := multiplexer.add(pillar_region)
+defregion(1, multiplexer)
+input_detector := cuboid(0.2e-6, 0.3e-6, 50e-9).transl(-0.75e-6, 0, -25e-9)
+output1_detector := cuboid(0.2e-6, 0.3e-6, 50e-9).transl(0.75e-6, 0.35e-6, -25e-9)
+output2_detector := cuboid(0.2e-6, 0.3e-6, 50e-9).transl(0.75e-6, -0.35e-6, -25e-9)
+defregion(2, input_detector)
+defregion(3, output1_detector)
+defregion(4, output2_detector)
+setgeom(full_geom)
+saveas(geom, "multiplexer")
+Msat = 1.4e5
+Aex = 3.5e-12
+alpha = 2e-4
+Msat.SetRegion(6, 800e3)
+Aex.SetRegion(6, 13e-12)
+Alpha.SetRegion(6, 0.02)
+Msat.SetRegion(1, 1.45e5)
+Aex.SetRegion(1, 3.5e-12)
+Alpha.SetRegion(1, 2e-4)
+numberofregions := 120
+minD := 2e-4
+maxD := 0.5
+scale_min := 0.9
+scale_max := 1.0
+k := pow(maxD/minD, 1.0/(numberofregions-1))
+m = uniform(1, .1, 0)
+B_ext = vector(0, 0, 0.2)
+relax()
+save(m)
+autosave(m, 200e-12)
+tableautosave(10e-12)
+f := 1e9
+B_ext.SetRegion(2, vector(0, 1e-2*sin(2*pi*f*t), 0))
+run(2e-9)
+//********************************************************************//
+//Please cite the following references, relevant for your simulation. //
+//See bibtex file in output folder for justification.                 //
+//********************************************************************//
+//   * Vansteenkiste et al., AIP Adv. 4, 107133 (2014).

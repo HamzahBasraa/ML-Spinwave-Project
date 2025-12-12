@@ -49,7 +49,7 @@ output2 := cuboid(1e-6,0.3e-6,50e-9).transl(1e-6,-350e-9,-25e-9)
 
 multiplexer :=input.add(box).add(output1).add(output2)
 
-full_geom := multiplexer.sub(pillar_region)
+full_geom := multiplexer.add(pillar_region)
 
 defregion(1,multiplexer)
 
@@ -63,11 +63,11 @@ defregion(1,multiplexer)
 
 //regions for propgation and detection
 
-input_detector := rect(0.2e-6, 0.3e-6).transl(-0.75e-6, 0 , 0)
+input_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(-0.75e-6, 0 , -25e-9)
 
-output1_detector := rect(0.2e-6, 0.3e-6).transl(0.75e-6, 0.35e-6 , 0)
+output1_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(0.75e-6, 0.35e-6 , -25e-9)
 
-output2_detector := rect(0.2e-6, 0.3e-6).transl(0.75e-6, -0.35e-6 , 0)
+output2_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(0.75e-6, -0.35e-6 , -25e-9)
 
 defregion(2,input_detector)
 defregion(3,output1_detector)
@@ -88,6 +88,9 @@ Msat.SetRegion(6, 800e3)
 Aex.SetRegion(6, 13e-12)
 Alpha.SetRegion(6, 0.02)
 
+Msat.SetRegion(1, 1.45e5)
+Aex.SetRegion(1, 3.5e-12)
+Alpha.SetRegion(1, 2e-4)
 
 numberofregions := 120                     // number of shells
 minD := 2e-4                 // start damping (inner)
@@ -99,23 +102,23 @@ scale_max := 1.0             // outermost scale (original size)
 k := pow(maxD/minD, 1.0/(numberofregions-1))   // NOTE: maxD/minD, and float divisor
 
 // loop from outermost (largest scale, i = N-1) down to innermost (i = 0)
-for i := numberofregions-1; i >= 0; i-- {
+//for i := numberofregions-1; i >= 0; i-- {
 
     // linear spacing for geometry (physical thickness equal)
-    distance := scale_min + (scale_max - scale_min) * i / (numberofregions-1)
+ //   distance := scale_min + (scale_max - scale_min) * i / (numberofregions-1)
 
     // exponential damping values from minD -> maxD
-    alphaValue := minD * pow(k, i)
+ //   alphaValue := minD * pow(k, i)
 
-    regionId := 12 + i
+ //   regionId := 12 + i
 
     // scaled geometry
-    shape_i := multiplexer.scale(distance, distance, 1)
+ //   shape_i := multiplexer.scale(distance, distance, 1)
 
-    defregion(regionId, shape_i)
-    alpha.SetRegion(regionId, alphaValue)
+  //  defregion(regionId, shape_i)
+  //  alpha.SetRegion(regionId, alphaValue)
 
-}
+//}
 
 // this is how the position of the cells starts
 m = uniform(1, .1, 0)
@@ -135,7 +138,7 @@ f := 1e9 // 1 gigahertz
 
 
 // Excitation field (applies only in region 2)
-B_ext.SetRegion(2,vector(0, 1e-3*sin(2*pi*f*t), 0))
+B_ext.SetRegion(2,vector(0, 1e-2*sin(2*pi*f*t), 0))
 
 
 
@@ -144,3 +147,4 @@ run(2e-9)
 //should only be one set geom , all magnetic regions should be included in this
 //increase z cells
 //genetic algos 
+// i am going to make the wave stronger. 
