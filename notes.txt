@@ -85,3 +85,5 @@ Resovioir computing
 
 
 current issues the cylinder is not interacting with the de multiplexer
+differential evolution bumps library 
+0.6 for crossover and mutation rate reference value 

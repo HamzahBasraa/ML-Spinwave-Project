@@ -13,23 +13,29 @@ import time
 file = 'task1.out/table.txt'
 output = "scriptcopy.out"
 name = "scriptcopy"
-file_path = 'task1.txt'
+file_path = 'task1.mx3'
 
 
-position_dict = {"c1_x": 0.2e-6,
-                "c1_y": -0.5e-6,
-                "c2_x": -0.1e-6,
-                "c2_y": 0.3e-6,
-                "c3_x": 0.4e-6,
-                "c3_y": -0.2e-6,
-                "c4_x": -0.3e-6,
-                "c4_y": 0.0e-6,
-                "c5_x": 0.5e-6,
-                "c5_y": 0.1e-6,
-                "c6_x": -0.4e-6,
-                "c6_y": -0.1e-6,
-                "c7_x": 0.0e-6,
-                "c7_y": 0.4e-6}
+position_dict = {"c1_x": 3e-7,
+                "c1_y": -7e-7,
+                "c2_x": -1e-7,
+                "c2_y": 4e-7,
+                "c3_x": 4e-7,
+                "c3_y": -2e-7,
+                "c4_x": -8e-7,
+                "c4_y": 0.0e-7,
+                "c5_x": 5e-7,
+                "c5_y": 6e-7,
+                "c6_x": -4e-7,
+                "c6_y": -1e-7,
+                "c7_x": 0.0e-7,
+                "c7_y": -2e-7,
+                "c8_x": 3e-7,
+                "c8_y": 5e-7,
+                "c9_x": -2e-7,
+                "c9_y": 3e-7,
+                "c10_x": 4e-7,
+                "c10_y": -4e-7}
 
 
 with open(file_path, 'r') as file: #script 
@@ -99,7 +105,7 @@ def run_mumax3(script, name, verbose=False):
 
 def fft(output_path):
 
-    files = sorted(glob(output_path + '/*.npy')) #ensures theyre in order 
+    files = sorted(glob(output_path + '/m*.npy')) #ensures theyre in order 
     n_components, n_z, n_y, n_x = np.load(files[4]).shape
     n_time = len(files)
     dt = 200e-12 #known time step should work to change this so it is extracted from the script
@@ -112,7 +118,7 @@ def fft(output_path):
     My_initial = data_5d[:,1,0,:,:] #3d array with time, x , y 
 
     my_t = My_initial - My_initial[0, :, :] #only containts oscillating data now as we removed the intial state
-
+    
 
     #performing fast fourier transform
     #------------------------------------------------
@@ -120,7 +126,7 @@ def fft(output_path):
     freqs = np.fft.fftfreq(n_time, dt)
 
 
-    f_drive = 1e9
+    f_drive = 2.6e9
     idx = np.argmin(np.abs(freqs - f_drive))
     amplitude = np.abs(fast_transform[idx, :, :])
 
@@ -138,14 +144,16 @@ def visualise(output_path):
         # an array should store the intesity of y at each point in the matrix
         # the matrix's coordinates ie [x][y] will store the normalised intensity of y at each point
 
-    files = sorted(glob(output_path + '/*.npy')) #ensures theyre in order 
+    files = sorted(glob(output_path + '/m*.npy')) #ensures theyre in order 
         
     for f in files: #for each file 
         a = np.load(f) #load the numpy arrays  in to python
 
         first_index = 1 if a.shape[0] > 1 else 0
 
-        My_first = a[first_index, 0, :, :]  # shape will be (32, 128)
+        # My_first = a[first_index, 0, :, :]  # shape will be (32, 128)
+        My_test = a[first_index, :, :, :]          # (Nz, Ny, Nx)
+        My_first = My_test.mean(axis=0)
 
         My = (My_first-My_first.min())/(My_first.max()-My_first.min())
 
@@ -158,24 +166,24 @@ def visualise(output_path):
 
 
 def update_parameters(input_file, position_dict):
-    """
-    param_dict = {'1_x': value, '1_y': value, 'length': value, ...}
-    """
-
     with open(input_file, 'r') as f:
         text = f.read()
 
-    # For each parameter create a regex pattern and replace
     for key, value in position_dict.items():
-        # MuMax lines look like: key := number
-        pattern = rf"{key}\s*:=\s*[-+0-9.eE]+"
-        replacement = f"{key} := {value}"
-        text = re.sub(pattern, replacement, text)
+        value_str = f"{float(value):.6g}"
+
+
+        pattern = rf"(\b{re.escape(key)}\b\s*:=\s*)([-+0-9.eE]+)"
+        text, n = re.subn(pattern, rf"\g<1>{value_str}", text)
+
+        if n == 0:
+            print(f"WARNING: parameter '{key}' not found")
 
     with open(input_file, 'w') as f:
         f.write(text)
 
-    print(f"Updated parameters")
+    print("Parameters updated successfully")
+
 
 def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     import numpy as np
@@ -206,7 +214,7 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     fast_transform = np.fft.fft(my_t, axis=0)
     freqs = np.fft.fftfreq(n_time, dt)
 
-    f_drive = 1e9  # 1 GHz
+    f_drive = 2.6e9  # 2.6 GHz
     idx = np.argmin(np.abs(freqs - f_drive))
 
     amplitude = np.abs(fast_transform[idx])
@@ -236,10 +244,10 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     # -----------------------
     # Plot FFT amplitude
     # -----------------------
-    plt.figure(figsize=(8, 3))
-    plt.imshow(amplitude, origin="lower", cmap="inferno")
-    plt.colorbar(label="|My(f)|")
-    plt.title("Detector Regions on FFT Amplitude")
+    # plt.figure(figsize=(8, 3))
+    # plt.imshow(amplitude, origin="lower", cmap="inferno")
+    # plt.colorbar(label="|My(f)|")
+    # plt.title("Detector Regions on FFT Amplitude")
 
     # -----------------------
     # Extract detector values
@@ -262,30 +270,30 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
         region = amplitude[iy_min:iy_max + 1, ix_min:ix_max + 1]
         results[name] = np.mean(region)
 
-        # ---- DRAW RECTANGLE ----
-        plt.gca().add_patch(
-            plt.Rectangle(
-                (ix_min, iy_min),
-                ix_max - ix_min,
-                iy_max - iy_min,
-                fill=False,
-                edgecolor="cyan",
-                linewidth=2
-            )
-        )
+    #     # ---- DRAW RECTANGLE ----
+    #     plt.gca().add_patch(
+    #         plt.Rectangle(
+    #             (ix_min, iy_min),
+    #             ix_max - ix_min,
+    #             iy_max - iy_min,
+    #             fill=False,
+    #             edgecolor="cyan",
+    #             linewidth=2
+    #         )
+    #     )
 
-        # ---- DRAW CENTER POINT ----
-        plt.scatter(
-            phys_to_ix(cx),
-            phys_to_iy(cy),
-            c="white",
-            s=30
-        )
+    #     # ---- DRAW CENTER POINT ----
+    #     plt.scatter(
+    #         phys_to_ix(cx),
+    #         phys_to_iy(cy),
+    #         c="white",
+    #         s=30
+    #     )
 
-    plt.xlabel("x (cells)")
-    plt.ylabel("y (cells)")
-    plt.tight_layout()
-    plt.show()
+    # plt.xlabel("x (cells)")
+    # plt.ylabel("y (cells)")
+    # plt.tight_layout()
+    # plt.show()
 
     print("Detector values:")
     print("Output 1:", results["output1"])
@@ -293,10 +301,18 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
 
     return results["output1"], results["output2"]
 
+
+
+
+
                 
-# run_mumax3(MumaxScript,name)
-# read_mumax3_ovffiles(output)
-# visualise(output)
+run_mumax3(MumaxScript,name)
+read_mumax3_ovffiles(output)
+visualise(output)
 fft(output)
-# update_parameters(file_path, position_dict)
+# update_parameters(file_path,position_dict)
+
 # extract_detector_fft(output)
+
+# differential evolution bumps library 
+# 0.6 for crossover and mutation rate reference value 

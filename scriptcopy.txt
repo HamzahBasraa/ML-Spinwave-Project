@@ -9,20 +9,26 @@ SetCellsize(5e-9, 5e-9, 5e-9)
 //variables to be changed by a machine learning algorithm
 
 
-c1_x := 0.2e-6
-c1_y := -0.5e-6
-c2_x := -0.1e-6
-c2_y := 0.3e-6
-c3_x := 0.4e-6
-c3_y := -0.2e-6
-c4_x := -0.3e-6
-c4_y := 0.0
-c5_x := 0.5e-6
-c5_y := 0.1e-6
-c6_x := -0.4e-6
-c6_y := -0.1e-6
-c7_x := 0.0
-c7_y := 0.4e-6
+c1_x := 3e-07
+c1_y := -2e-07
+c2_x := -1e-07
+c2_y := 4e-07
+c3_x := 4e-07
+c3_y := -2e-07
+c4_x := -5e-07
+c4_y := 0
+c5_x := 5e-07
+c5_y := 3e-07
+c6_x := -4e-07
+c6_y := -1e-07
+c7_x := 0
+c7_y := -2e-07
+c8_x := 3e-07
+c8_y := 5e-07
+c9_x := -2e-07
+c9_y := 3e-07
+c10_x := 4e-07
+c10_y := -4e-07
 //square cutouts
 length := 0.05e-6
 
@@ -40,17 +46,20 @@ cyl4 := cylinder(length,pillar_height).transl(c4_x,c4_y,pillar_z)
 cyl5 := cylinder(length,pillar_height).transl(c5_x,c5_y,pillar_z)
 cyl6 := cylinder(length,pillar_height).transl(c6_x,c6_y,pillar_z)
 cyl7 := cylinder(length,pillar_height).transl(c7_x,c7_y,pillar_z)
+cyl8 := cylinder(length,pillar_height).transl(c8_x,c8_y,pillar_z)
+cyl9 := cylinder(length,pillar_height).transl(c9_x,c9_y,pillar_z)
+cyl10 := cylinder(length,pillar_height).transl(c10_x,c10_y,pillar_z)
 
-pillar_region := cyl1.add(cyl2).add(cyl3).add(cyl4).add(cyl5).add(cyl6).add(cyl7)
+pillar_region := cyl1.add(cyl2).add(cyl3).add(cyl4).add(cyl5).add(cyl6).add(cyl7).add(cyl8).add(cyl9).add(cyl10)
 defregion(6,pillar_region)
 
-box := cuboid(1e-6,1e-6,50e-9).transl(0,0,-25e-9)
+box := cuboid(1e-6,1e-6,50e-9).transl(0,0,0)
 
-input := cuboid(1e-6,0.3e-6,50e-9).transl(-1e-6, 0,-25e-9)
+input := cuboid(1e-6,0.3e-6,50e-9).transl(-1e-6, 0,0)
 
-output1 := cuboid(1e-6,0.3e-6,50e-9).transl(1e-6,350e-9,-25e-9)
+output1 := cuboid(1e-6,0.3e-6,50e-9).transl(1e-6,350e-9,0)
 
-output2 := cuboid(1e-6,0.3e-6,50e-9).transl(1e-6,-350e-9,-25e-9)
+output2 := cuboid(1e-6,0.3e-6,50e-9).transl(1e-6,-350e-9,0)
 
 multiplexer :=input.add(box).add(output1).add(output2)
 
@@ -68,11 +77,11 @@ defregion(1,multiplexer)
 
 //regions for propgation and detection
 
-input_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(-0.75e-6, 0 , -25e-9)
+input_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(-0.75e-6, 0 , 0)
 
-output1_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(0.75e-6, 0.35e-6 , -25e-9)
+output1_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(0.75e-6, 0.35e-6 , 0)
 
-output2_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(0.75e-6, -0.35e-6 , -25e-9)
+output2_detector := cuboid(0.2e-6, 0.3e-6,50e-9).transl(0.75e-6, -0.35e-6 , 0)
 
 defregion(2,input_detector)
 defregion(3,output1_detector)
@@ -89,7 +98,7 @@ Aex   = 3.5e-12
 alpha = 2e-4
 
 
-Msat.SetRegion(6, 800e3)
+Msat.SetRegion(6, 1.1e6)
 Aex.SetRegion(6, 13e-12)
 Alpha.SetRegion(6, 0.02)
 
@@ -107,23 +116,23 @@ scale_max := 1.0             // outermost scale (original size)
 k := pow(maxD/minD, 1.0/(numberofregions-1))   // NOTE: maxD/minD, and float divisor
 
 // loop from outermost (largest scale, i = N-1) down to innermost (i = 0)
-//for i := numberofregions-1; i >= 0; i-- {
+// for i := numberofregions-1; i >= 0; i-- {
 
-    // linear spacing for geometry (physical thickness equal)
- //   distance := scale_min + (scale_max - scale_min) * i / (numberofregions-1)
+//    //  linear spacing for geometry (physical thickness equal)
+//    distance := scale_min + (scale_max - scale_min) * i / (numberofregions-1)
 
-    // exponential damping values from minD -> maxD
- //   alphaValue := minD * pow(k, i)
+//    //  exponential damping values from minD -> maxD
+//    alphaValue := minD * pow(k, i)
 
- //   regionId := 12 + i
+//    regionId := 12 + i
 
-    // scaled geometry
- //   shape_i := multiplexer.scale(distance, distance, 1)
+//    //  scaled geometry
+//    shape_i := multiplexer.scale(distance, distance, 1)
 
-  //  defregion(regionId, shape_i)
-  //  alpha.SetRegion(regionId, alphaValue)
+//    defregion(regionId, shape_i)
+//    alpha.SetRegion(regionId, alphaValue)
 
-//}
+// }
 
 // this is how the position of the cells starts
 m = uniform(1, .1, 0)
@@ -137,13 +146,13 @@ autosave(m, 200e-12)
 tableautosave(10e-12)
 
 //frequency 
-f := 1e9 // 1 gigahertz
+f := 2.6e9 // 1 gigahertz
 // the external magnet 
 // Uniform bias field (applies everywhere)
 
 
 // Excitation field (applies only in region 2)
-B_ext.SetRegion(2,vector(0, 1e-2*sin(2*pi*f*t), 0))
+B_ext.SetRegion(2,vector(0, 1e-2*sin(2*pi*f*t), 0.02))
 
 
 
