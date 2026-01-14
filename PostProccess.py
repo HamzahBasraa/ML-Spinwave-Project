@@ -36,7 +36,7 @@ position_dict = {"c1_x": 3e-7,
                 "c9_y": 3e-7,
                 "c10_x": 4e-7,
                 "c10_y": -4e-7}
-
+PARAM_KEYS = list(position_dict.keys())
 
 with open(file_path, 'r') as file: #script 
     MumaxScript = file.read()
@@ -186,7 +186,7 @@ def update_parameters(input_file, position_dict):
     print("Parameters updated successfully")
 
 
-def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
+def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9, f_drive=2.6e9):
     import numpy as np
     import matplotlib.pyplot as plt
     from glob import glob
@@ -216,7 +216,6 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     fast_transform = np.fft.fft(my_t, axis=0)
     freqs = np.fft.fftfreq(n_time, dt)
 
-    f_drive = 2.6e9  # 2.6 GHz
     idx = np.argmin(np.abs(freqs - f_drive))
 
     amplitude = np.abs(fast_transform[idx])
@@ -304,12 +303,62 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
     return results["output1"], results["output2"]
 
 
+def evaluate_fitness(candidate_vector, run_id):
+    # --- 1. UPDATE YOUR EXISTING DICTIONARY ---
+    # We take the numbers from the GA and put them into position_dict
+    # for i, key in enumerate(PARAM_KEYS):
+    #     position_dict[key] = candidate_vector[i]
 
-                
+    # # --- 2. PREPARE THE SCRIPT USING YOUR FUNCTION ---
+    # # Create a temporary copy of the base script for this specific run
+    # # (We don't want to overwrite 'task1.mx3' directly, or we might lose the original values)
+    # temp_script_path = f"task1.mx3"
+
+    # # USE YOUR EXISTING FUNCTION to update the file
+    # # This edits 'temp_script_path' in place using the values we just put in position_dict
+    # update_parameters(temp_script_path, position_dict)
+
+    # # Read the updated script back into memory to pass to the runner
+    # with open(temp_script_path, 'r') as f:
+    #     script_content = f.read()
+
+    # --- 3. RUN SIMULATION ---
+    output_dir = run_id + ".out"
+    total_fitness = -100.0 
+
+    try:
+        # Run Mumax using the script content we just prepared
+        # run_mumax3(script_content, run_id)
+        
+        # --- 4. ANALYZE (Same as before) ---
+        # Frequency 1 (2.6 GHz) -> Target: Output 1
+        out1_f1, out2_f1 = extract_detector_fft(output_dir, f_drive=2.6e9, dt = 50e-12)
+        score_f1 = (out1_f1 - out2_f1)
+
+        # Frequency 2 (2.8 GHz) -> Target: Output 2
+        out1_f2, out2_f2 = extract_detector_fft(output_dir, f_drive=2.8e9, dt = 50e-12)
+        score_f2 = (out2_f2 - out1_f2)
+
+        total_fitness = score_f1 + score_f2
+        print(f"Run {run_id}: F1_Score={score_f1:.2e} | F2_Score={score_f2:.2e} | Total={total_fitness:.4f}")
+
+    except Exception as e:
+        print(f"Run {run_id} Failed: {e}")
+
+
+    return total_fitness
+
+
+# 2. Convert your dictionary values to a list
+test_vector = list(position_dict.values())
+
+# 3. Call the function
+evaluate_fitness(test_vector, run_id="simple_test")
+
 # run_mumax3(MumaxScript,name)
 # read_mumax3_ovffiles(output)
 # visualise(output)
-fft(output)
+# fft(output)
 # update_parameters(file_path,position_dict)
 
 # extract_detector_fft(output)
