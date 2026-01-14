@@ -3,7 +3,7 @@
 //CPU info: Unknown, Error: exec: "wmic": executable file not found in %PATH%
 //GPU info: NVIDIA GeForce RTX 3080(10239MB), CUDA Driver 13.0, cc=8.6, using cc=75 PTX
 //OS  info: Windows OS, Hostname: DESKTOP-GQDTGDJ
-//Timestamp: 2025-12-16 13:23:10
+//Timestamp: 2026-01-13 23:49:37
 //(c) Arne Vansteenkiste, Dynamat LAB, Ghent University, Belgium
 //This is free software without any warranty. See license.txt
 //********************************************************************//
@@ -85,8 +85,9 @@ relax()
 save(m)
 autosave(m, 200e-12)
 tableautosave(10e-12)
-f := 2.6e9
-B_ext.SetRegion(2, vector(0, 1e-2*sin(2*pi*f*t), 0.02))
+f1 := 2.6e9
+f2 := 2.8e9
+B_ext.SetRegion(2, vector(0, 1e-2*sin(2*pi*f1*t)+1e-2*sin(2*pi*f2*t), 0.02))
 run(2e-9)
 //********************************************************************//
 //Please cite the following references, relevant for your simulation. //

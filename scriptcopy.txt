@@ -146,13 +146,14 @@ autosave(m, 200e-12)
 tableautosave(10e-12)
 
 //frequency 
-f := 2.6e9 // 1 gigahertz
+f1 := 2.6e9 // 2.6 gigahertz
+f2 := 2.8e9 // 3.6 gigahertz
 // the external magnet 
 // Uniform bias field (applies everywhere)
 
 
 // Excitation field (applies only in region 2)
-B_ext.SetRegion(2,vector(0, 1e-2*sin(2*pi*f*t), 0.02))
+B_ext.SetRegion(2,vector(0, 1e-2*sin(2*pi*f1*t)+ 1e-2*sin(2*pi*f2*t), 0.02))
 
 
 

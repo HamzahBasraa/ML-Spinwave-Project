@@ -117,7 +117,8 @@ def fft(output_path):
         data_5d[i] = np.load(f) #this is the 5d array
     My_initial = data_5d[:,1,0,:,:] #3d array with time, x , y 
 
-    my_t = My_initial - My_initial[0, :, :] #only containts oscillating data now as we removed the intial state
+    z_middle = int(n_z / 2) # added this as de multiplexer is 3d
+    my_t = data_5d[:, 1, z_middle, :, :]
     
 
     #performing fast fourier transform
@@ -203,8 +204,9 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
         data_5d[i] = np.load(f)
 
     # Use My component (index 1) at z = 0
-    my_t = data_5d[:, 1, 0, :, :]
 
+    z_middle = int(n_z / 2) # added this as de multiplexer is 3d
+    my_t = data_5d[:, 1, z_middle, :, :]
     # Remove DC component (better than subtracting first frame)
     my_t = my_t - np.mean(my_t, axis=0)
 
@@ -303,86 +305,10 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9):
 
 
 
-# N_PILLARS = 10
-
-# # physical bounds (must stay inside grid)
-# X_MIN, X_MAX = -0.5e-6, 0.5e-6
-# Y_MIN, Y_MAX = -0.45e-6, 0.45e-6
-
-# GENOME_SIZE = 2 * N_PILLARS
-
-
-# def genome_to_dict(genome):
-#     """
-    # genome: 1D numpy array of length 20 use postiion _ dict 
-#     returns: dict compatible with update_parameters()
-#     """
-#     d = {}
-#     for i in range(N_PILLARS):
-#         d[f"c{i+1}_x"] = genome[2*i]
-#         d[f"c{i+1}_y"] = genome[2*i + 1]
-#     return d
-
-
-# def random_genome():
-#     g = np.zeros(GENOME_SIZE)
-#     for i in range(N_PILLARS):
-#         g[2*i]     = np.random.uniform(X_MIN, X_MAX)
-#         g[2*i + 1] = np.random.uniform(Y_MIN, Y_MAX)
-#     return g
-
-
-# def fitness(genome):
-#     """
-#     Fitness for spin-wave demultiplexer.
-#     Maximizes output1, suppresses output2.
-#     """
-
-#     # ---- 1. Write genome into MuMax script ----
-#     param_dict = genome_to_dict(genome)
-#     update_parameters("task1.mx3", param_dict)
-
-#     # ---- 2. Run MuMax ----
-#     name = "ga_run"
-#     try:
-#         run_mumax3(MumaxScript, name, verbose=False)
-#     except Exception as e:
-#         print("MuMax failed:", e)
-#         return -1e9  # catastrophic failure
-
-#     output_path = name + ".out"
-
-#     # ---- 3. Extract detector FFT amplitudes ----
-#     try:
-#         O1, O2 = extract_detector_fft(output_path)
-#     except Exception as e:
-#         print("FFT extraction failed:", e)
-#         return -1e9
-
-#     # ---- 4. Core demultiplexer objective ----
-#     eps = 1e-30
-#     signal_term = (O1 - O2) / (O1 + O2 + eps)
-
-#     # ---- 5. Penalize bad geometries ----
-#     penalty = overlap_penalty(genome)
-
-#     fitness_value = signal_term - 5.0 * penalty
-
-#     # ---- 6. Safety: reject NaNs ----
-#     if not np.isfinite(fitness_value):
-#         return -1e9
-
-#     print(f"O1={O1:.3e}  O2={O2:.3e}  fitness={fitness_value:.4f}")
-
-#     return fitness_value
-
-
-
-
                 
-run_mumax3(MumaxScript,name)
-read_mumax3_ovffiles(output)
-visualise(output)
+# run_mumax3(MumaxScript,name)
+# read_mumax3_ovffiles(output)
+# visualise(output)
 fft(output)
 # update_parameters(file_path,position_dict)
 

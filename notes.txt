@@ -87,3 +87,16 @@ Resovioir computing
 current issues the cylinder is not interacting with the de multiplexer
 differential evolution bumps library 
 0.6 for crossover and mutation rate reference value 
+
+genetic algorithm:
+
+fitness evaluation- check that waves are being seperated correctly and meeting the seperation criteria 
+                    aditionally individual circles are evaluated for their contribution for the seperation
+                                        ↓
+selection -         based of the fitness candidates select the parents for the next step 
+                                        ↓
+crossover -         create a new list of circle locations, based on the best locations between parents 
+                                        ↓
+mutation  -         introducing randomness by changing a random variable 
+                                        ↓
+replacement-        deciding which values stay till the next round 
