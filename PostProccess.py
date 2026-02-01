@@ -9,6 +9,7 @@ from numpy import load
 import os
 import re
 import time 
+import random
 
 file = 'task1.out/table.txt'
 output = "scriptcopy.out"
@@ -186,7 +187,7 @@ def update_parameters(input_file, position_dict):
     print("Parameters updated successfully")
 
 
-def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9, f_drive=2.6e9):
+def extract_detector_fft(output_path, dt=100e-12, cellsize=5e-9, f_drive=2.6e9):
     import numpy as np
     import matplotlib.pyplot as plt
     from glob import glob
@@ -306,21 +307,21 @@ def extract_detector_fft(output_path, dt=200e-12, cellsize=5e-9, f_drive=2.6e9):
 def evaluate_fitness(candidate_vector, run_id):
     # --- 1. UPDATE YOUR EXISTING DICTIONARY ---
     # We take the numbers from the GA and put them into position_dict
-    # for i, key in enumerate(PARAM_KEYS):
-    #     position_dict[key] = candidate_vector[i]
+    for i, key in enumerate(PARAM_KEYS):
+        position_dict[key] = candidate_vector[i]
 
     # # --- 2. PREPARE THE SCRIPT USING YOUR FUNCTION ---
     # # Create a temporary copy of the base script for this specific run
     # # (We don't want to overwrite 'task1.mx3' directly, or we might lose the original values)
-    # temp_script_path = f"task1.mx3"
+    temp_script_path = f"task1.mx3"
 
     # # USE YOUR EXISTING FUNCTION to update the file
     # # This edits 'temp_script_path' in place using the values we just put in position_dict
-    # update_parameters(temp_script_path, position_dict)
+    update_parameters(temp_script_path, position_dict)
 
     # # Read the updated script back into memory to pass to the runner
-    # with open(temp_script_path, 'r') as f:
-    #     script_content = f.read()
+    with open(temp_script_path, 'r') as f:
+        script_content = f.read()
 
     # --- 3. RUN SIMULATION ---
     output_dir = run_id + ".out"
@@ -328,15 +329,15 @@ def evaluate_fitness(candidate_vector, run_id):
 
     try:
         # Run Mumax using the script content we just prepared
-        # run_mumax3(script_content, run_id)
+        run_mumax3(script_content, run_id)
         
         # --- 4. ANALYZE (Same as before) ---
         # Frequency 1 (2.6 GHz) -> Target: Output 1
-        out1_f1, out2_f1 = extract_detector_fft(output_dir, f_drive=2.6e9, dt = 50e-12)
+        out1_f1, out2_f1 = extract_detector_fft(output_dir, f_drive=2.6e9, dt = 100e-12)
         score_f1 = (out1_f1 - out2_f1)
 
         # Frequency 2 (2.8 GHz) -> Target: Output 2
-        out1_f2, out2_f2 = extract_detector_fft(output_dir, f_drive=2.8e9, dt = 50e-12)
+        out1_f2, out2_f2 = extract_detector_fft(output_dir, f_drive=2.8e9, dt = 100e-12)
         score_f2 = (out2_f2 - out1_f2)
 
         total_fitness = score_f1 + score_f2
@@ -345,23 +346,154 @@ def evaluate_fitness(candidate_vector, run_id):
     except Exception as e:
         print(f"Run {run_id} Failed: {e}")
 
+        # We create a list containing [ID, Fitness, c1_x, c1_y, c2_x, ...]
+    log_data = [run_id, total_fitness] + list(candidate_vector)
+    columns = ['run_id', 'fitness'] + PARAM_KEYS
+    
+    # Convert to DataFrame
+    df_log = pd.DataFrame([log_data], columns=columns)
+    
+    # Append to CSV (header=True only if file doesn't exist yet)
+    log_file = "ga_history.csv"
+    file_exists = os.path.isfile(log_file)
+    df_log.to_csv(log_file, mode='a', header=not file_exists, index=False)
+
 
     return total_fitness
 
 
-# 2. Convert your dictionary values to a list
-test_vector = list(position_dict.values())
+def tournament_selection(population, fitnesses, tournament_size=3):
+    """
+    Select one individual from the population using tournament selection.
 
-# 3. Call the function
-evaluate_fitness(test_vector, run_id="simple_test")
+    population: list of candidate vectors
+    fitnesses: list of fitness values (same order as population)
+    tournament_size: number of individuals competing
+    """
+    selected_indices = random.sample(range(len(population)), tournament_size)
+
+    best_idx = selected_indices[0]
+    best_fitness = fitnesses[best_idx]
+
+    for idx in selected_indices[1:]:
+        if fitnesses[idx] > best_fitness:   # MAXIMISATION
+            best_idx = idx
+            best_fitness = fitnesses[idx]
+
+    return population[best_idx]
+
+def uniform_crossover(parent1, parent2, crossover_rate=0.6):
+    """
+    Uniform crossover for real-valued vectors.
+    
+    parent1, parent2: numpy arrays of same length
+    crossover_rate: probability of taking gene from parent1
+    """
+    child = parent1.copy()
+
+    for i in range(len(parent1)):
+        if np.random.rand() > crossover_rate:
+            child[i] = parent2[i]
+
+    return child
+
+
+def mutate(candidate,
+           mutation_strength=0.1e-6,
+           mutation_rate=0.6,
+           grid=0.1e-6,
+           limit=0.5e-6):
+    """
+    Mutation with:
+    - Gaussian noise
+    - snapping to discrete grid
+    - hard bounds enforcement
+
+    candidate: numpy array [c1_x, c1_y, ...]
+    """
+
+    mutant = candidate.copy()
+
+    for i, key in enumerate(PARAM_KEYS):
+
+        if np.random.rand() < mutation_rate:
+            # --- 1. Gaussian perturbation ---
+            mutant[i] += mutation_strength * np.random.randn()
+
+            # --- 2. Snap to allowed grid ---
+            mutant[i] = np.round(mutant[i] / grid) * grid
+
+            # --- 3. Enforce bounds ---
+            mutant[i] = np.clip(mutant[i], -limit, +limit)
+
+    return mutant
+
+def elitist_replacement(population, fitnesses, new_population):
+    """
+    Keep the best individual from the old population
+    and insert it into the new population.
+    """
+    best_idx = np.argmax(fitnesses)
+    elite = population[best_idx]
+
+    # Replace a random child (or worst, if you track it)
+    replace_idx = np.random.randint(len(new_population))
+    new_population[replace_idx] = elite
+
+    return new_population
+
+def run_genetic_algorithm():
+    # --- 1. Settings ---
+    POP_SIZE = 10
+    GENERATIONS = 50
+    # Create initial random population (random values between -0.5e-6 and 0.5e-6)
+    population = [np.random.uniform(-0.5e-6, 0.5e-6, 20) for _ in range(POP_SIZE)]
+
+    for gen in range(GENERATIONS):
+        print(f"\n=== GENERATION {gen} ===")
+        
+        # --- 2. Evaluation Step ---
+        fitness_scores = []
+        for i, individual in enumerate(population):
+            # Run simulation for this individual
+            run_name = f"gen_{gen}_ind_{i}"
+            score = evaluate_fitness(individual, run_name)
+            fitness_scores.append(score)
+
+        # Track progress
+        best_score = max(fitness_scores)
+        print(f"Best Score: {best_score:.4f}")
+        
+        # --- 3. Breeding Step (Selection, Crossover, Mutation) ---
+        new_population = []
+        
+        # Fill the new population
+        while len(new_population) < POP_SIZE:
+            # A. Select Parents
+            parent1 = tournament_selection(population, fitness_scores)
+            parent2 = tournament_selection(population, fitness_scores)
+            
+            # B. Crossover
+            child = uniform_crossover(parent1, parent2)
+            
+            # C. Mutate
+            child = mutate(child)
+            
+            new_population.append(child)
+
+        # --- 4. Elitism Step ---
+        # Ensure the absolute best from the old generation survives
+        population = elitist_replacement(population, fitness_scores, new_population)
+        
+        # Save the best individual to a file so you don't lose progress
+        best_idx = np.argmax(fitness_scores)
+        np.save(f"best_candidate_gen_{gen}.npy", population[best_idx])
+
+
 
 # run_mumax3(MumaxScript,name)
 # read_mumax3_ovffiles(output)
 # visualise(output)
-# fft(output)
-# update_parameters(file_path,position_dict)
-
-# extract_detector_fft(output)
-
-# differential evolution bumps library 
-# 0.6 for crossover and mutation rate reference value 
+fft(output)
+    # print("Starting Genetic Algorithm")
+    # run_genetic_algorithm()

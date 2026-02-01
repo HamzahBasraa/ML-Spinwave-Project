@@ -100,3 +100,5 @@ crossover -         create a new list of circle locations, based on the best loc
 mutation  -         introducing randomness by changing a random variable 
                                         ↓
 replacement-        deciding which values stay till the next round 
+# differential evolution bumps library 
+# 0.6 for crossover and mutation rate reference value 
