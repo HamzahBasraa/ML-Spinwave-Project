@@ -10,9 +10,10 @@ import os
 import re
 import time 
 import random
+import shutil
 
 file = 'task1.out/table.txt'
-output = "scriptcopy.out"
+output = "gen_12_ind_7.out"
 name = "scriptcopy"
 file_path = 'task1.mx3'
 
@@ -310,13 +311,10 @@ def evaluate_fitness(candidate_vector, run_id):
     for i, key in enumerate(PARAM_KEYS):
         position_dict[key] = candidate_vector[i]
 
-    # # --- 2. PREPARE THE SCRIPT USING YOUR FUNCTION ---
-    # # Create a temporary copy of the base script for this specific run
-    # # (We don't want to overwrite 'task1.mx3' directly, or we might lose the original values)
+
     temp_script_path = f"task1.mx3"
 
-    # # USE YOUR EXISTING FUNCTION to update the file
-    # # This edits 'temp_script_path' in place using the values we just put in position_dict
+
     update_parameters(temp_script_path, position_dict)
 
     # # Read the updated script back into memory to pass to the runner
@@ -444,10 +442,19 @@ def elitist_replacement(population, fitnesses, new_population):
 
 def run_genetic_algorithm():
     # --- 1. Settings ---
-    POP_SIZE = 10
-    GENERATIONS = 50
+    POP_SIZE = 5
+    GENERATIONS = 25
+    GRID = 0.1e-6
+    LIMIT = 0.5e-6
     # Create initial random population (random values between -0.5e-6 and 0.5e-6)
-    population = [np.random.uniform(-0.5e-6, 0.5e-6, 20) for _ in range(POP_SIZE)]
+    def create_random_individual():
+        """Create a random individual with grid-snapped values"""
+        n_params = len(PARAM_KEYS)
+        n_steps = int(2 * LIMIT / GRID)  # Number of grid points from -limit to +limit
+        random_steps = np.random.randint(-n_steps//2, n_steps//2 + 1, size=n_params)
+        return random_steps * GRID
+    
+    population = [create_random_individual() for _ in range(POP_SIZE)]
 
     for gen in range(GENERATIONS):
         print(f"\n=== GENERATION {gen} ===")
@@ -459,6 +466,7 @@ def run_genetic_algorithm():
             run_name = f"gen_{gen}_ind_{i}"
             score = evaluate_fitness(individual, run_name)
             fitness_scores.append(score)
+            shutil.rmtree(run_name+".out")  # delete folder after finishing
 
         # Track progress
         best_score = max(fitness_scores)
@@ -495,5 +503,5 @@ def run_genetic_algorithm():
 # read_mumax3_ovffiles(output)
 # visualise(output)
 fft(output)
-    # print("Starting Genetic Algorithm")
-    # run_genetic_algorithm()
+# print("Starting Genetic Algorithm")
+# run_genetic_algorithm()
