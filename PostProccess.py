@@ -13,7 +13,7 @@ import random
 import shutil
 
 file = 'task1.out/table.txt'
-output = "gen_12_ind_7.out"
+output = "scriptcopy.out"
 name = "scriptcopy"
 file_path = 'task1.mx3'
 
@@ -37,7 +37,14 @@ position_dict = {"c1_x": 3e-7,
                 "c9_x": -2e-7,
                 "c9_y": 3e-7,
                 "c10_x": 4e-7,
-                "c10_y": -4e-7}
+                "c10_y": -4e-7,
+                "c11_x": 1e-7,
+                "c11_y": -4e-7,
+                "c12_x": 1e-7,
+                "c12_y": 4e-7,
+                "c13_x": 2e-7,
+                "c13_y": 3e-7,
+                "c14_x": 5e-7,}
 PARAM_KEYS = list(position_dict.keys())
 
 with open(file_path, 'r') as file: #script 
@@ -110,7 +117,7 @@ def fft(output_path):
     files = sorted(glob(output_path + '/m*.npy')) #ensures theyre in order 
     n_components, n_z, n_y, n_x = np.load(files[4]).shape
     n_time = len(files)
-    dt = 200e-12 #known time step should work to change this so it is extracted from the script
+    dt = 100e-12 #known time step should work to change this so it is extracted from the script
 
     # Create empty 5D array
     data_5d = np.zeros((n_time, n_components, n_z, n_y, n_x))
@@ -122,7 +129,9 @@ def fft(output_path):
     z_middle = int(n_z / 2) # added this as de multiplexer is 3d
     my_t = data_5d[:, 1, z_middle, :, :]
     
-
+    discard = int(5e-9 / dt)     # 5 ns
+    my_t = my_t[discard:]
+    n_time = my_t.shape[0]
     #performing fast fourier transform
     #------------------------------------------------
     fast_transform = np.fft.fft(my_t, axis=0)  
@@ -206,12 +215,14 @@ def extract_detector_fft(output_path, dt=100e-12, cellsize=5e-9, f_drive=2.6e9):
         data_5d[i] = np.load(f)
 
     # Use My component (index 1) at z = 0
-
+    
     z_middle = int(n_z / 2) # added this as de multiplexer is 3d
     my_t = data_5d[:, 1, z_middle, :, :]
     # Remove DC component (better than subtracting first frame)
     my_t = my_t - np.mean(my_t, axis=0)
-
+    discard = int(5e-9 / dt)     # 5 ns
+    my_t = my_t[discard:]
+    n_time = my_t.shape[0]
     # -----------------------
     # FFT
     # -----------------------
@@ -220,7 +231,7 @@ def extract_detector_fft(output_path, dt=100e-12, cellsize=5e-9, f_drive=2.6e9):
 
     idx = np.argmin(np.abs(freqs - f_drive))
 
-    amplitude = np.abs(fast_transform[idx])
+    amplitude = np.abs(fast_transform[idx]) # focused on power instead of amplitude
 
     # -----------------------
     # Geometry / coordinates
@@ -333,12 +344,14 @@ def evaluate_fitness(candidate_vector, run_id):
         # Frequency 1 (2.6 GHz) -> Target: Output 1
         out1_f1, out2_f1 = extract_detector_fft(output_dir, f_drive=2.6e9, dt = 100e-12)
         score_f1 = (out1_f1 - out2_f1)
+        score_f1 = max(score_f1, 0)
 
         # Frequency 2 (2.8 GHz) -> Target: Output 2
         out1_f2, out2_f2 = extract_detector_fft(output_dir, f_drive=2.8e9, dt = 100e-12)
         score_f2 = (out2_f2 - out1_f2)
+        score_f2 = max(score_f2, 0)
 
-        total_fitness = score_f1 + score_f2
+        total_fitness = score_f1 * score_f2
         print(f"Run {run_id}: F1_Score={score_f1:.2e} | F2_Score={score_f2:.2e} | Total={total_fitness:.4f}")
 
     except Exception as e:
@@ -398,7 +411,7 @@ def uniform_crossover(parent1, parent2, crossover_rate=0.6):
 
 def mutate(candidate,
            mutation_strength=0.1e-6,
-           mutation_rate=0.6,
+           mutation_rate=0.15,
            grid=0.1e-6,
            limit=0.5e-6):
     """
@@ -463,7 +476,7 @@ def run_genetic_algorithm():
         fitness_scores = []
         for i, individual in enumerate(population):
             # Run simulation for this individual
-            run_name = f"gen_{gen}_ind_{i}"
+            run_name = f"1gen_{gen}_ind_{i}"
             score = evaluate_fitness(individual, run_name)
             fitness_scores.append(score)
             shutil.rmtree(run_name+".out")  # delete folder after finishing
@@ -505,3 +518,4 @@ def run_genetic_algorithm():
 fft(output)
 # print("Starting Genetic Algorithm")
 # run_genetic_algorithm()
+
