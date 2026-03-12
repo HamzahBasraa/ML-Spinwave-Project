@@ -1,0 +1,171 @@
+
+//IMPORTANT
+convert ovf to np arrays  using mumax convert
+just look at y components
+use the 2d matrix to map out the component 
+can ignore z as its one cell thick so same fro all
+interpret y values as pixel brightneses
+normalise according to largest number
+do this for each ovf file
+np arrays are zyx [1.2.3]
+[0] is xyz
+
+play this as a video 
+
+
+
+fourier transform 
+for each pixel we do it
+use z as a function of time 
+its like making a heat map
+^^^ look into this after first stask
+
+
+
+demonestarte that waves dont go aroudn corners well
+could test the minimum radius of a bemd to see whats needed for a curve to go aroudn
+
+acyion points 
+change b field
+frist task
+
+search python for mumax3 - google colab 
+
+
+Material: ( check the paper he sent for material detials)
+YIG 
+Msat
+aex
+
+
+// weeks 5
+May want to concatenate all npy files in to a 5d array 
+
+Then I can do a Fourier transform across that 5th dimension 
+
+Fst is a useful algorithm  - fast Fourier transform 
+
+     Takes a signal that has time on the x axis 
+
+     And separate it to the sin waves 
+
+     Can tell us how far a 2.2ghz can oscillate 
+
+
+
+Fix magnet:
+
+B_ext 
+
+Specify a region where the oscillation starts 
+
+Copy the paper 
+
+
+May want to concatenate all npy files in to a 5f array 
+Then I can do a Fourier transform across that 5th dimension 
+Fst is a useful algorithm  - fast Fourier transform 
+     Takes a signal that has time on the x axis 
+     And separate it to the sin waves 
+     Can tell us how far a 2.2ghz can oscillate 
+
+Fix magnet 
+B_ext 
+Specify a region where the oscillation starts 
+Copy the paper 
+
+Use shape .scale 
+Make multiplexer from paper but 3d
+Instead of holes put magnets which dot above the device 
+Make the shapes cylinders 
+Use machine learning to try and find the optimal postion of these cylinders 
+Look into genetic algos 
+Gradient descent 
+Resovioir computing
+
+
+current issues the cylinder is not interacting with the de multiplexer
+differential evolution bumps library 
+0.6 for crossover and mutation rate reference value 
+
+genetic algorithm:
+
+fitness evaluation- check that waves are being seperated correctly and meeting the seperation criteria 
+                    aditionally individual circles are evaluated for their contribution for the seperation
+                                        ↓
+selection -         based of the fitness candidates select the parents for the next step 
+                                        ↓
+crossover -         create a new list of circle locations, based on the best locations between parents 
+                                        ↓
+mutation  -         introducing randomness by changing a random variable 
+                                        ↓
+replacement-        deciding which values stay till the next round 
+# differential evolution bumps library 
+# 0.6 for crossover and mutation rate reference value 
+
+crossover may be to high after running 2 iterations
+lowered to 0.15 for 3rd run 
+normalised f1 and f2 scores 
+added multiplication to fitness total score to avoid allowing for a bias 
+score_f2 = (out2_f2 - out1_f2)
+        score_f2 = max(score_f2, 0)
+added this removed normalisation
+current best values:
+c1_x := 5e-07
+c1_y := 4e-07
+c2_x := 2e-07
+c2_y := -2e-07
+c3_x := 3e-07
+c3_y := 3e-07
+c4_x := 3e-07
+c4_y := 5e-07
+c5_x := 5e-07
+c5_y := -0
+c6_x := 1e-07
+c6_y := -5e-07
+c7_x := -5e-07
+c7_y := -2e-07
+c8_x := -5e-07
+c8_y := 3e-07
+c9_x := -2e-07
+c9_y := 2e-07
+c10_x := -3e-07
+c10_y := 4e-07
+considering a switch to a direct binary search as opposed to a genetic algorithm which doesnt seem to be effective 
+
+good result which seperates 2.6 very well
+c1_x := 2e-07
+c1_y := -1e-07
+c2_x := -3e-07
+c2_y := 5e-07
+c3_x := 5e-07
+c3_y := 5e-07
+c4_x := -5e-07
+c4_y := 3e-07
+c5_x := -5e-07
+c5_y := -2e-07
+c6_x := 5e-07
+c6_y := 0
+c7_x := 2e-07
+c7_y := -2e-07
+c8_x := -4e-07
+c8_y := 4e-07
+c9_x := -2e-07
+c9_y := -4e-07
+c10_x := -4e-07
+c10_y := 3e-07
+
+
+https://www.sciencedirect.com/science/article/pii/S0304885320323027?utm_source=chatgpt.com // material values
+https://eprints.soton.ac.uk/417118/1/1.5006576.pdf? perma alloy material details
+https://addi.ehu.es/bitstream/handle/10810/32776/1.5080111.pdf?sequence=1
+
+
+plot average and current best 
+
+resovoir papers:
+http://www.scholarpedia.org/article/Echo_state_network?source=post_page-----f910809d23d4----------------------
+https://pubmed.ncbi.nlm.nih.gov/37940652/
+https://www.researchgate.net/publication/371855439_Spintronic_reservoir_computing_without_driving_current_or_magnetic_field
+
+using mfccs we can split the audio into key points which can be used for waves in mumax

@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH --job-name=mumax_spinwave      # Job name
+#SBATCH --account=fse-ugpgt+           # Your CSF3 account
+#SBATCH --partition=gpuA                # GPU partition
+#SBATCH --gres=gpu:1                    # Request 1 GPU
+#SBATCH --nodes=1                       # Number of nodes
+#SBATCH --ntasks=1                      # Number of tasks
+#SBATCH --cpus-per-task=4               # CPU cores per task
+#SBATCH --time=24:00:00                 # Max runtime hh:mm:ss
+#SBATCH --mem=32G                        # Memory per node
+#SBATCH --output=output_%j.out          # Standard output file
+#SBATCH --error=error_%j.err            # Standard error file
+
+# ---- Load modules ----
+module purge
+module load cuda
+
+# ---- Add MuMax3 to PATH ----
+export PATH=$HOME/mumax3.11.1_linux_cuda12.9:$PATH
+
+# ---- Go to the directory where the job was submitted ----
+cd $SLURM_SUBMIT_DIR
+python3 -u Dbs.py
