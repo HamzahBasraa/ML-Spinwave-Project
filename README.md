@@ -43,7 +43,3 @@ Results are from single random seeds and one fixed, unoptimised reservoir geomet
 ## Acknowledgements
 
 Supervised by William Griggs, Department of Computer Science, University of Manchester.
-
-## License
-
-Add a license of your choice here (e.g. MIT) if you intend the code to be reused.
